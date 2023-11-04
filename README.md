@@ -3,6 +3,10 @@
 - This project is to find some methods to solve a specific form of Rubik's Cube.
 ## Tasks
 - building simulation models
+ <img width="309" alt="Screenshot 2023-11-04 at 18 29 30" src="https://github.com/RogerChan0307/rubik-s-cube-solving/assets/140886171/f65a80f3-61f0-4a4d-859a-289aa4301fc6">
+
+
+ 
 ## Log 
 - Project creation -Jul.29.2023
 - Complete of 3D model -Nov.03.2023
