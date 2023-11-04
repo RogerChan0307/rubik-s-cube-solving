@@ -1,25 +1,15 @@
 var myFont;
-// var rxyz = [
-//   [0, 0, 0],
-//   [0, 0, 0],
-//   [0, 0, 0],
-//   [0, 0, 0],
-//   [0, 0, 0],
-//   [0, 0, 0],
-//   [0, 0, 0],
-//   [0, 0, 0],
-// ];
-// var ry = [0, 0, 0, 0, 0, 0, 0, 0];
-// var rz = [0, 0, 0, 0, 0, 0, 0, 0];
-// var dx = 0;
-// var dy = 0;
-// var dz = 0;
-// var adx = 0; // 每次轉動角度
-// var ady = 0;
-// var adz = 0;
-// var rx = 0;
-//   ry = 0;
-//   rz = 0;
+const targetLen = 40;
+// 旋轉的角度
+var d_rx = 0;
+var d_ry = 0;
+var d_rz = 0;
+// 每個方塊
+var cubes = [];
+
+// 隨機清單
+var shuffle_list = [];
+var shuffle_list_idx = 0;
 
 class Cube {
   constructor(cx, cy, cz, sz) {
@@ -81,32 +71,36 @@ class Cube {
     this.faces[5].push([cx + len, cy - len, cz + len]);
     this.faces[5].push([cx + len, cy - len, cz - len]);
     this.faces[5].push([cx - len, cy - len, cz - len]);
-    
+
     this.cal_center();
   }
-cal_center(){
-  var n =0;
-  var ax =0;
-  var ay=0;
-  var az=0;
-  for (var face of this.faces) {     
+  cal_center() {
+    var n = 0;
+    var ax = 0;
+    var ay = 0;
+    var az = 0;
+    for (var face of this.faces) {
       for (var vx of face) {
-        ax+=vx[0];
-        ay+=vx[1];
-        az+=vx[2];
+        ax += vx[0];
+        ay += vx[1];
+        az += vx[2];
         n++;
-        }
+      }
+    }
+    this.cx = ax / n;
+    this.cy = ay / n;
+    this.cz = az / n;
   }
-   this.cx = ax/n;
-   this.cy = ay/n;
-   this.cz = az/n;
-}
-  
+
   show() {
     let i = 0;
     for (var face of this.faces) {
       beginShape();
       let c = this.colors[i];
+      // 內側面給灰色
+      if (this.inside_face(face)) {
+        c = [100, 100, 100]; // 灰色
+      }
       fill(c[0], c[1], c[2]);
       for (var vx of face) {
         vertex(vx[0], vx[1], vx[2]);
@@ -115,23 +109,66 @@ cal_center(){
       i++;
     }
   }
-  
-  update( rx , ry , rz ){
+
+  round_all_vertex() {
+    for (var face of this.faces) {
+      for (var vx of face) {
+        // update vertex
+        for (let i = 0; i < 3; i++) {
+          vx[i] = round(vx[i]);
+        }
+      }
+    }
+  }
+
+  update(rx, ry, rz) {
     // print( this.faces[0]) ;
-    for (var face of this.faces) {     
+
+    let check_fit = true;
+    for (var face of this.faces) {
       for (var vx of face) {
         //vertex(vx[0], vx[1], vx[2]);
-        var after_loc  = this.cal_location([vx[0], vx[1], vx[2],1],0,0,0,rx,ry,rz ) ;
-        vx[0] = after_loc[0] ;
-        vx[1] = after_loc[1] ;
-        vx[2] = after_loc[2] ;
-      }      
+        var after_loc = this.cal_location(
+          [vx[0], vx[1], vx[2], 1],
+          0,
+          0,
+          0,
+          rx,
+          ry,
+          rz
+        );
+
+        // update vertex
+        for (let i = 0; i < 3; i++) {
+          vx[i] = after_loc[i];
+          let v = abs(round(vx[i]));
+          if (v != 0 && v != targetLen) {
+            check_fit = false;
+          }
+        }
+      }
     }
     // print( this.faces[0]) ;
     // print("==================");
+    if (check_fit) {
+      this.round_all_vertex();
+    }
     this.cal_center();
+    return check_fit;
   }
-  
+
+  inside_face(face_vertex) {
+    for (
+      let i = 0;
+      i < 3;
+      i++ // 3 個軸
+    )
+      if (face_vertex[0][i] == 0)
+        if (face_vertex[1][i] == 0)
+          if (face_vertex[2][i] == 0)
+            if (face_vertex[3][i] == 0) if (face_vertex[4][i] == 0) return true;
+    return false;
+  }
 
   matrix_dot(vec, mat) {
     let result = [];
@@ -179,35 +216,218 @@ cal_center(){
     // print(r1);
     r1 = this.matrix_dot(r1, mry);
     // print(r1);
-    return [round(r1[0]),round( r1[1]), round(r1[2])];
+    return [r1[0], r1[1], r1[2]];
   }
 }
 
+function create_shuffle_list(n) {
+  let a = ["x", "y", "z"];
+  for (let i = 0; i < n; i++) {
+    let r = int(random(3));
+    shuffle_list.push(a[r]);
+  }
+}
 
-var c1 = new Cube( -20,-20, -20 , 40 ) ;
-var c2 = new Cube( -20 , 20, -20 , 40 ) ;
-var c3 = new Cube( -20 , -20, 20 , 40 ) ;
-var c4 = new Cube( 20 , 20, -20 , 40 ) ;
-var c5 = new Cube( -20 , 20, 20 , 40 ) ;
-var c6 = new Cube( 20 , -20, 20 , 40 ) ;
-var c7 = new Cube( 20 , -20, -20 , 40 ) ;
-var c8 = new Cube( 20 , 20, 20 , 40 ) ;
-
-var cubes=[];
-cubes.push(c1);
-cubes.push(c2);
-cubes.push(c3);
-cubes.push(c4);
-cubes.push(c5);
-cubes.push(c6);
-cubes.push(c7);
-cubes.push(c8);
-
-
-
-
+function create_cubes() {
+  var pos = [-20, 20];
+  for (let n1 of pos) {
+    for (let n2 of pos) {
+      for (let n3 of pos) {
+        cubes.push(new Cube(n1, n2, n3, targetLen));
+      }
+    }
+  }
+}
 function preload() {
   myFont = loadFont("montserrat.regular.ttf");
+}
+
+function key_events() {
+  const r = 3;
+  if (keyIsPressed) {
+    //print(keyCode);
+    switch (keyCode) {
+      case 65: //a
+        if (d_ry == 0 && d_rz == 0) {
+          d_rx = 6 * r;
+        }
+        break;
+
+      case 83: //s
+        if (d_rx == 0 && d_rz == 0) {
+          d_ry = 6 * r;
+        }
+        break;
+
+      case 68: //d
+        if (d_ry == 0 && d_rx == 0) {
+          d_rz = 6 * r;
+        }
+        break;
+
+      case 90: //z
+        if (d_ry == 0 && d_rz == 0) {
+          d_rx = -6 * r;
+        }
+        break;
+
+      case 88: //x
+        if (d_rx == 0 && d_rz == 0) {
+          d_ry = -6 * r;
+        }
+        break;
+
+      case 67: //c
+        if (d_ry == 0 && d_rx == 0) {
+          d_rz = -6 * r;
+        }
+        break;
+
+      case 82: //r
+        if (shuffle_list.length == shuffle_list_idx) {
+          create_shuffle_list(20);
+          print(shuffle_list);
+        }
+        break;
+    }
+  }
+}
+
+function turn(axis) {
+  let f_count = 0;
+  for (let item of cubes) {
+    if (axis == "x") {
+      if (item.cx > 0) {
+        if (item.update(d_rx, 0, 0)) {
+          f_count++;
+        }
+      }
+    } else if (axis == "y") {
+      if (item.cy > 0) {
+        if (item.update(0, d_ry, 0)) {
+          f_count++;
+        }
+      }
+    } else {
+      if (item.cz > 0) {
+        if (item.update(0, 0, d_rz)) {
+          f_count++;
+        }
+      }
+    }
+  }
+  //print( "fc:"+f_count) ;
+  if (f_count == 4) {
+    // 停止轉動
+    if (axis == "x") {
+      d_rx = 0;
+    } else if (axis == "y") {
+      d_ry = 0;
+    } else {
+      d_rz = 0;
+    }
+  }
+}
+
+function all_same_items(arr) {
+  let first = arr[0];
+  for (let i = 1; i < arr.length; i++) {
+    if (arr[i] != first) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function complete() {
+  // 紀錄每個方塊投影到每個方向的顏色編號
+  let xp = []; // 紀錄 x+ 的方向
+  let xn = []; // 紀錄 x- 的方向
+  let yp = [];
+  let yn = [];
+  let zp = [];
+  let zn = [];
+
+  for (var cube of cubes) {
+    for (let i = 0; i < 6; i++) {
+      let face = cube.faces[i];
+
+      if (
+        // 4點的 x
+        face[0][0] == targetLen &&
+        face[1][0] == targetLen &&
+        face[2][0] == targetLen &&
+        face[3][0] == targetLen
+      ) {
+        xp.push(i);
+      } else if (
+        // 4點的 x
+        face[0][0] == -targetLen &&
+        face[1][0] == -targetLen &&
+        face[2][0] == -targetLen &&
+        face[3][0] == -targetLen
+      ) {
+        xn.push(i);
+      } else if (
+        // 4點的 y
+        face[0][1] == targetLen &&
+        face[1][1] == targetLen &&
+        face[2][1] == targetLen &&
+        face[3][1] == targetLen
+      ) {
+        yp.push(i);
+      } else if (
+        // 4點的 y
+        face[0][1] == -targetLen &&
+        face[1][1] == -targetLen &&
+        face[2][1] == -targetLen &&
+        face[3][1] == -targetLen
+      ) {
+        yn.push(i);
+      } else if (
+        // 4點的 z
+        face[0][2] == targetLen &&
+        face[1][2] == targetLen &&
+        face[2][2] == targetLen &&
+        face[3][2] == targetLen
+      ) {
+        zp.push(i);
+      } else if (
+        // 4點的 z
+        face[0][2] == -targetLen &&
+        face[1][2] == -targetLen &&
+        face[2][2] == -targetLen &&
+        face[3][2] == -targetLen
+      ) {
+        zn.push(i);
+      }
+    }
+  }
+
+  // print( "-----------");
+  // print( xp);
+  // print( xn);
+  // print( yp);
+  // print( yn);
+  // print( zp);
+  // print( zn);
+  // print( "-----------");
+
+  // 檢查：每個方向內的"投影顏色編號" 都相同 ==> 顏色一致
+  if (all_same_items(xp)) {
+    if (all_same_items(xn)) {
+      if (all_same_items(yp)) {
+        if (all_same_items(yn)) {
+          if (all_same_items(zp)) {
+            if (all_same_items(zn)) {
+              return true;
+            }
+          }
+        }
+      }
+    }
+  }
+  return false;
 }
 
 function setup() {
@@ -215,124 +435,66 @@ function setup() {
   angleMode(DEGREES);
   textFont(myFont);
   textSize(16);
-}
 
+  create_cubes();
 
-
-
-
-function turn_around() {
-  dx += adx;
-  dy += ady;
-  dz += adz;
-
-  dx = rotate_right(dx);
-  dy = rotate_right(dy);
-  dz = rotate_right(dz);
-
-  if (dx % 90 == 0) {
-    adx = 0;
-  }
-  if (dy % 90 == 0) {
-    ady = 0;
-  }
-  if (dz % 90 == 0) {
-    adz = 0;
-  }
-
-  print("dx,dy,dz ==> " + dx + " , " + dy + " , " + dz);
-}
-
-function key_events() {
-  if (keyIsPressed) {
-    //print(keyCode);
-    switch (keyCode) {
-      case 81: //q
-        turn_type = "X";
-        break;
-      case 87: //w
-        turn_type = "Y";
-        break;
-      case 69: //e
-        turn_type = "Z";
-        break;
-      case 65: //a
-        //if (dx == 0 && dy == 0 && dz == 0) {
-        adx = 6;
-
-        //}
-        break;
-      case 83: //s
-        //if (dx == 0 && dy == 0 && dz == 0) {
-        ady = 6;
-
-        //}
-        break;
-      case 68: //d
-        //if (dx == 0 && dy == 0 && dz == 0) {
-        adz = 6;
-
-        //}
-        break;
-    }
-  }
-}
-
-
-function turnX(cubes){
-  
-  for(let item of cubes){
-    if(item.cx>0){
-      item.update(5,0,0);
-    }
-  }
-}
-function turnY(cubes){
-  
-  for(let item of cubes){
-    if(item.cy>0){
-      item.update(0,5,0);
-    }
-  }
-}
-function turnZ(cubes){
-  
-  for(let item of cubes){
-    if(item.cz>0){
-      item.update(0,0,5);
-    }
-  }
+  print( "完成?"+complete());
 }
 
 function draw() {
   // 背景色
   background(200);
-  // 滑鼠控制
+
+  // 訊息
+  fill(30);
+  text("A , S , D : rotate", -120, 120);
+  text("Z , X , C : rotate(backward)", -120, 150);
+  text("R : shuffle", -120, 180);
+
+  // 滑鼠控制：旋轉攝影機
   orbitControl(2, 2, 2);
 
-  push(); // 結界-start
-  fill(50); // 設定填滿色彩
-  text("1 (1,1)", 40, 50); // 寫 X,Y,Z
-  text("2 (1,-1)", 40, -50); // 寫 X,Y,Z
-  text("3 (-1,1)", -80, 50); // 寫 X,Y,Z
-  text("4 (-1,-1)", -80, -50); // 寫 X,Y,Z
-  pop(); // 結界-end
+  // push(); // 結界-start
+  // fill(50); // 設定填滿色彩
+  // text("1 (1,1)", 40, 50); // 寫 X,Y,Z
+  // text("2 (1,-1)", 40, -50); // 寫 X,Y,Z
+  // text("3 (-1,1)", -80, 50); // 寫 X,Y,Z
+  // text("4 (-1,-1)", -80, -50); // 寫 X,Y,Z
+  // pop(); // 結界-end
 
+  // 由 shuffle list 進行旋轉
+  if (shuffle_list_idx < shuffle_list.length) {
+    // 全部停止才可以轉
+    if (d_rx == 0 && d_ry == 0 && d_rz == 0) {
+      print("shuffle turn : " + shuffle_list_idx);
+      if (shuffle_list[shuffle_list_idx] == "x") {
+        d_rx = 18;
+      } else if (shuffle_list[shuffle_list_idx] == "y") {
+        d_ry = 18;
+      } else if (shuffle_list[shuffle_list_idx] == "z") {
+        d_rz = 18;
+      }
+      shuffle_list_idx++;
+    }
+  }
 
-  //turnX(cubes);
-//  turnY(cubes);
- turnZ(cubes);
-  
-  
-  c1.show();
-  c2.show();
-  c3.show();
-  c4.show();
-  c5.show();
-  c6.show();
-  c7.show();
-  c8.show();
-  //key_events();
-  //turn_around();
+  // 旋轉
+  if (d_rx != 0 && d_ry == 0 && d_rz == 0) {
+    turn("x");
+  } else if (d_rx == 0 && d_ry != 0 && d_rz == 0) {
+    turn("y");
+  } else if (d_rx == 0 && d_ry == 0 && d_rz != 0) {
+    turn("z");
+  }else{
+    print( "完成?"+complete());
+  }
+
+  // 顯示
+  for (let c of cubes) {
+    c.show();
+    // print( c.faces) ;
+  }
+
+  // 取得鍵盤事件
+  key_events();
 }
-
