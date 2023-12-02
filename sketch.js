@@ -17,6 +17,7 @@ class Cube {
     this.colors = [];
 
     let len = sz / 2;
+    this.cube_length = sz;
     // UP
     this.faces[0] = [];
     this.colors[0] = [200, 0, 0];
@@ -80,7 +81,9 @@ class Cube {
     var ay = 0;
     var az = 0;
     for (var face of this.faces) {
-      for (var vx of face) {
+      //for (var vx of face) {
+      for (var i = 0; i < 4; i++) {
+        var vx = face[i];
         ax += vx[0];
         ay += vx[1];
         az += vx[2];
@@ -155,6 +158,107 @@ class Cube {
     }
     this.cal_center();
     return check_fit;
+  }
+
+  color_code(c_array) {
+    if (c_array[0] == 200) {
+      if (c_array[1] == 0) {
+        if (c_array[2] == 0) {
+          return "R";
+        }
+      }
+    }
+    if (c_array[0] == 0) {
+      if (c_array[1] == 200) {
+        if (c_array[2] == 0) {
+          return "G";
+        }
+      }
+    }
+    if (c_array[0] == 0) {
+      if (c_array[1] == 0) {
+        if (c_array[2] == 200) {
+          return "B";
+        }
+      }
+    }
+    if (c_array[0] == 200) {
+      if (c_array[1] == 200) {
+        if (c_array[2] == 0) {
+          return "Y";
+        }
+      }
+    }
+    if (c_array[0] == 200) {
+      if (c_array[1] == 0) {
+        if (c_array[2] == 200) {
+          return "P";
+        }
+      }
+    }
+    if (c_array[0] == 0) {
+      if (c_array[1] == 200) {
+        if (c_array[2] == 200) {
+          return "S"; // Sky blue
+        }
+      }
+    }
+    return "";
+  }
+
+  outside_face_color_seg() {
+    // x:+- >>> y:+- --> z:+-
+    var xp = ""; //x+
+    var xn = ""; //x-
+    var yp = ""; //y+
+    var yn = ""; //y-
+    var zp = ""; //z+
+    var zn = ""; //z-
+
+    for (var i = 0; i < this.faces.length; i++) {
+      if (this.inside_face(this.faces[i])) {
+        continue;
+      }
+      //print(this.faces[i]) ;
+      var ss = this.sum_all_vertex(this.faces[i]);
+      //print( "---"+ss+"  "+this.cube_length) ;
+      var maxv = this.cube_length * 5; // 5 vertex
+      var tag = this.color_code(this.colors[i]);
+      if (ss[0] == maxv) {
+        xp = tag;
+      }
+      if (ss[0] == -maxv) {
+        xn = tag;
+      }
+      if (ss[1] == maxv) {
+        yp = tag;
+      }
+      if (ss[1] == -maxv) {
+        yn = tag;
+      }
+      if (ss[2] == maxv) {
+        zp = tag;
+      }
+      if (ss[2] == -maxv) {
+        zn = tag;
+      }
+    }
+
+    return xp + xn + yp + yn + zp + zn;
+  }
+
+  sum_all_vertex(face_vertex) {
+    //print(">>>>"+face_vertex)
+    var sum = [0, 0, 0];
+    for (let i = 0; i < 3; i++) {
+      sum[i] =
+        face_vertex[0][i] +
+        face_vertex[1][i] +
+        face_vertex[2][i] +
+        face_vertex[3][i] +
+        face_vertex[4][i];
+    }
+    return sum;
   }
 
   inside_face(face_vertex) {
@@ -349,7 +453,104 @@ function complete() {
   let zn = [];
 
   for (var cube of cubes) {
+    // 某一個方塊
     for (let i = 0; i < 6; i++) {
+      // i可以視為顏色代號
+      // （方塊6面的）某一面
+      let face = cube.faces[i];
+
+      if (
+        // 4點的 x
+        face[0][0] == targetLen &&
+        face[1][0] == targetLen &&
+        face[2][0] == targetLen &&
+        face[3][0] == targetLen
+      ) {
+        xp.push(i);
+      } else if (
+        // 4點的 x
+        face[0][0] == -targetLen &&
+        face[1][0] == -targetLen &&
+        face[2][0] == -targetLen &&
+        face[3][0] == -targetLen
+      ) {
+        xn.push(i);
+      } else if (
+        // 4點的 y
+        face[0][1] == targetLen &&
+        face[1][1] == targetLen &&
+        face[2][1] == targetLen &&
+        face[3][1] == targetLen
+      ) {
+        yp.push(i);
+      } else if (
+        // 4點的 y
+        face[0][1] == -targetLen &&
+        face[1][1] == -targetLen &&
+        face[2][1] == -targetLen &&
+        face[3][1] == -targetLen
+      ) {
+        yn.push(i);
+      } else if (
+        // 4點的 z
+        face[0][2] == targetLen &&
+        face[1][2] == targetLen &&
+        face[2][2] == targetLen &&
+        face[3][2] == targetLen
+      ) {
+        zp.push(i);
+      } else if (
+        // 4點的 z
+        face[0][2] == -targetLen &&
+        face[1][2] == -targetLen &&
+        face[2][2] == -targetLen &&
+        face[3][2] == -targetLen
+      ) {
+        zn.push(i);
+      }
+    }
+  }
+
+  // print( "-----------");
+  // print( xp);
+  // print( xn);
+  // print( yp);
+  // print( yn);
+  // print( zp);
+  // print( zn);
+  // print( "-----------");
+
+  // 檢查：每個方向內的"投影顏色編號" 都相同 ==> 顏色一致
+  if (all_same_items(xp)) {
+    if (all_same_items(xn)) {
+      if (all_same_items(yp)) {
+        if (all_same_items(yn)) {
+          if (all_same_items(zp)) {
+            if (all_same_items(zn)) {
+              return true;
+            }
+          }
+        }
+      }
+    }
+  }
+  return false;
+}
+
+function cube_status_tag() {
+  // 紀錄每個方塊投影到每個方向的顏色編號
+  let xp = []; // 紀錄 x+ 的方向
+  let xn = []; // 紀錄 x- 的方向
+  let yp = [];
+  let yn = [];
+  let zp = [];
+  let zn = [];
+
+  for (var cube of cubes) {
+    // 某一個方塊
+    for (let i = 0; i < 6; i++) {
+      // i可以視為顏色代號
+      // （方塊6面的）某一面
       let face = cube.faces[i];
 
       if (
@@ -438,7 +639,9 @@ function setup() {
 
   create_cubes();
 
-  print( "完成?"+complete());
+  var p = new TransStatus();
+  print(p);
+  print("完成?" + complete());
 }
 
 function draw() {
@@ -485,16 +688,63 @@ function draw() {
     turn("y");
   } else if (d_rx == 0 && d_ry == 0 && d_rz != 0) {
     turn("z");
-  }else{
-    print( "完成?"+complete());
+  } else {
+    print("完成?" + complete());
   }
 
   // 顯示
   for (let c of cubes) {
     c.show();
+
+    // print( c.cx+","+c.cy+","+c.cz+",")
+    // if (c.cx == 20 && c.cy == 20 && c.cz == 20) {
+    //   print("#" + c.outside_face_color_seg());
+    // }
     // print( c.faces) ;
   }
-
+  
+  //print( get_seq()) ;
+  // print("===============")
   // 取得鍵盤事件
   key_events();
 }
+
+function get_seq() {
+  var seq = ["","","","","","","",""] ;
+  for (let c of cubes) {
+    if (c.cx == 20 && c.cy == 20 && c.cz == 20) {
+      seq[0]=c.outside_face_color_seg();
+    }
+    if (c.cx == 20 && c.cy == 20 && c.cz == -20) {
+      seq[1]=c.outside_face_color_seg();
+    }
+    if (c.cx == 20 && c.cy == -20 && c.cz == 20) {
+      seq[2]=c.outside_face_color_seg();
+    }
+    if (c.cx == 20 && c.cy == -20 && c.cz == -20) {
+      seq[3]=c.outside_face_color_seg();
+    }
+    if (c.cx == -20 && c.cy == 20 && c.cz == 20) {
+      seq[4]=c.outside_face_color_seg();
+    }
+    if (c.cx == -20 && c.cy == 20 && c.cz == -20) {
+      seq[5]=c.outside_face_color_seg();
+    }
+    if (c.cx == -20 && c.cy == -20 && c.cz == 20) {
+      seq[6]=c.outside_face_color_seg();
+    }
+    if (c.cx == -20 && c.cy == -20 && c.cz == -20) {
+      seq[7]=c.outside_face_color_seg();
+    }
+    
+  }
+  var s="";
+  for(var item of seq){
+    s=s+item;
+  }
+  
+  return s;
+}
+
+
+
