@@ -11,6 +11,14 @@ var cubes = [];
 var shuffle_list = [];
 var shuffle_list_idx = 0;
 
+// 用來紀錄轉換的過程
+var trans_ori_seq = ""; //原來的狀態
+var trans_axis = ""; // 旋轉的方式
+var trans_table = {}; // 記錄所有轉換的狀態
+
+var is_save = false;
+
+
 class Cube {
   constructor(cx, cy, cz, sz) {
     this.faces = [];
@@ -325,9 +333,9 @@ class Cube {
 }
 
 function create_shuffle_list(n) {
-  let a = ["x", "y", "z"];
+  let a = ["x+", "y+", "z+","x-", "y-", "z-"];
   for (let i = 0; i < n; i++) {
-    let r = int(random(3));
+    let r = int(random(6));
     shuffle_list.push(a[r]);
   }
 }
@@ -341,6 +349,8 @@ function create_cubes() {
       }
     }
   }
+  trans_ori_seq =  get_seq();
+  print("START:"+trans_ori_seq) ;
 }
 function preload() {
   myFont = loadFont("montserrat.regular.ttf");
@@ -389,7 +399,7 @@ function key_events() {
 
       case 82: //r
         if (shuffle_list.length == shuffle_list_idx) {
-          create_shuffle_list(20);
+          create_shuffle_list(10000);
           print(shuffle_list);
         }
         break;
@@ -537,99 +547,99 @@ function complete() {
   return false;
 }
 
-function cube_status_tag() {
-  // 紀錄每個方塊投影到每個方向的顏色編號
-  let xp = []; // 紀錄 x+ 的方向
-  let xn = []; // 紀錄 x- 的方向
-  let yp = [];
-  let yn = [];
-  let zp = [];
-  let zn = [];
+// function cube_status_tag() {
+//   // 紀錄每個方塊投影到每個方向的顏色編號
+//   let xp = []; // 紀錄 x+ 的方向
+//   let xn = []; // 紀錄 x- 的方向
+//   let yp = [];
+//   let yn = [];
+//   let zp = [];
+//   let zn = [];
 
-  for (var cube of cubes) {
-    // 某一個方塊
-    for (let i = 0; i < 6; i++) {
-      // i可以視為顏色代號
-      // （方塊6面的）某一面
-      let face = cube.faces[i];
+//   for (var cube of cubes) {
+//     // 某一個方塊
+//     for (let i = 0; i < 6; i++) {
+//       // i可以視為顏色代號
+//       // （方塊6面的）某一面
+//       let face = cube.faces[i];
 
-      if (
-        // 4點的 x
-        face[0][0] == targetLen &&
-        face[1][0] == targetLen &&
-        face[2][0] == targetLen &&
-        face[3][0] == targetLen
-      ) {
-        xp.push(i);
-      } else if (
-        // 4點的 x
-        face[0][0] == -targetLen &&
-        face[1][0] == -targetLen &&
-        face[2][0] == -targetLen &&
-        face[3][0] == -targetLen
-      ) {
-        xn.push(i);
-      } else if (
-        // 4點的 y
-        face[0][1] == targetLen &&
-        face[1][1] == targetLen &&
-        face[2][1] == targetLen &&
-        face[3][1] == targetLen
-      ) {
-        yp.push(i);
-      } else if (
-        // 4點的 y
-        face[0][1] == -targetLen &&
-        face[1][1] == -targetLen &&
-        face[2][1] == -targetLen &&
-        face[3][1] == -targetLen
-      ) {
-        yn.push(i);
-      } else if (
-        // 4點的 z
-        face[0][2] == targetLen &&
-        face[1][2] == targetLen &&
-        face[2][2] == targetLen &&
-        face[3][2] == targetLen
-      ) {
-        zp.push(i);
-      } else if (
-        // 4點的 z
-        face[0][2] == -targetLen &&
-        face[1][2] == -targetLen &&
-        face[2][2] == -targetLen &&
-        face[3][2] == -targetLen
-      ) {
-        zn.push(i);
-      }
-    }
-  }
+//       if (
+//         // 4點的 x
+//         face[0][0] == targetLen &&
+//         face[1][0] == targetLen &&
+//         face[2][0] == targetLen &&
+//         face[3][0] == targetLen
+//       ) {
+//         xp.push(i);
+//       } else if (
+//         // 4點的 x
+//         face[0][0] == -targetLen &&
+//         face[1][0] == -targetLen &&
+//         face[2][0] == -targetLen &&
+//         face[3][0] == -targetLen
+//       ) {
+//         xn.push(i);
+//       } else if (
+//         // 4點的 y
+//         face[0][1] == targetLen &&
+//         face[1][1] == targetLen &&
+//         face[2][1] == targetLen &&
+//         face[3][1] == targetLen
+//       ) {
+//         yp.push(i);
+//       } else if (
+//         // 4點的 y
+//         face[0][1] == -targetLen &&
+//         face[1][1] == -targetLen &&
+//         face[2][1] == -targetLen &&
+//         face[3][1] == -targetLen
+//       ) {
+//         yn.push(i);
+//       } else if (
+//         // 4點的 z
+//         face[0][2] == targetLen &&
+//         face[1][2] == targetLen &&
+//         face[2][2] == targetLen &&
+//         face[3][2] == targetLen
+//       ) {
+//         zp.push(i);
+//       } else if (
+//         // 4點的 z
+//         face[0][2] == -targetLen &&
+//         face[1][2] == -targetLen &&
+//         face[2][2] == -targetLen &&
+//         face[3][2] == -targetLen
+//       ) {
+//         zn.push(i);
+//       }
+//     }
+//   }
 
-  // print( "-----------");
-  // print( xp);
-  // print( xn);
-  // print( yp);
-  // print( yn);
-  // print( zp);
-  // print( zn);
-  // print( "-----------");
+//   // print( "-----------");
+//   // print( xp);
+//   // print( xn);
+//   // print( yp);
+//   // print( yn);
+//   // print( zp);
+//   // print( zn);
+//   // print( "-----------");
 
-  // 檢查：每個方向內的"投影顏色編號" 都相同 ==> 顏色一致
-  if (all_same_items(xp)) {
-    if (all_same_items(xn)) {
-      if (all_same_items(yp)) {
-        if (all_same_items(yn)) {
-          if (all_same_items(zp)) {
-            if (all_same_items(zn)) {
-              return true;
-            }
-          }
-        }
-      }
-    }
-  }
-  return false;
-}
+//   // 檢查：每個方向內的"投影顏色編號" 都相同 ==> 顏色一致
+//   if (all_same_items(xp)) {
+//     if (all_same_items(xn)) {
+//       if (all_same_items(yp)) {
+//         if (all_same_items(yn)) {
+//           if (all_same_items(zp)) {
+//             if (all_same_items(zn)) {
+//               return true;
+//             }
+//           }
+//         }
+//       }
+//     }
+//   }
+//   return false;
+// }
 
 function setup() {
   createCanvas(400, 400, WEBGL);
@@ -639,9 +649,7 @@ function setup() {
 
   create_cubes();
 
-  var p = new TransStatus();
-  print(p);
-  print("完成?" + complete());
+  load_trans_table();
 }
 
 function draw() {
@@ -670,15 +678,41 @@ function draw() {
     // 全部停止才可以轉
     if (d_rx == 0 && d_ry == 0 && d_rz == 0) {
       print("shuffle turn : " + shuffle_list_idx);
-      if (shuffle_list[shuffle_list_idx] == "x") {
-        d_rx = 18;
-      } else if (shuffle_list[shuffle_list_idx] == "y") {
-        d_ry = 18;
-      } else if (shuffle_list[shuffle_list_idx] == "z") {
-        d_rz = 18;
+
+      log_trans_status();
+
+      if (shuffle_list[shuffle_list_idx] == "x+") {
+        trans_axis = "x+";
+        // d_rx = 18;
+        d_rx = 90;
+      } else if (shuffle_list[shuffle_list_idx] == "y+") {
+        trans_axis = "y+";
+        // d_ry = 18;
+        d_ry = 90;
+      } else if (shuffle_list[shuffle_list_idx] == "z+") {
+        trans_axis = "z+";
+        // d_rz = 18;
+        d_rz = 90;
+      }else if (shuffle_list[shuffle_list_idx] == "x-") {
+        trans_axis = "x-";
+        // d_rx = 18;
+        d_rx = -90;
+      } else if (shuffle_list[shuffle_list_idx] == "y-") {
+        trans_axis = "y-";
+        // d_ry = 18;
+        d_ry = -90;
+      } else if (shuffle_list[shuffle_list_idx] == "z-") {
+        trans_axis = "z-";
+        // d_rz = 18;
+        d_rz = -90;
       }
       shuffle_list_idx++;
     }
+  } else if(shuffle_list.length>0 && is_save==false){
+    print(trans_table);
+    print( get_trans_stat() ) ;
+    save_trans_table();
+    is_save = true;
   }
 
   // 旋轉
@@ -689,7 +723,7 @@ function draw() {
   } else if (d_rx == 0 && d_ry == 0 && d_rz != 0) {
     turn("z");
   } else {
-    print("完成?" + complete());
+    //print("完成?" + complete());
   }
 
   // 顯示
@@ -702,7 +736,7 @@ function draw() {
     // }
     // print( c.faces) ;
   }
-  
+
   //print( get_seq()) ;
   // print("===============")
   // 取得鍵盤事件
@@ -710,41 +744,102 @@ function draw() {
 }
 
 function get_seq() {
-  var seq = ["","","","","","","",""] ;
+  var seq = ["", "", "", "", "", "", "", ""]; // 8 個方塊的序列
   for (let c of cubes) {
     if (c.cx == 20 && c.cy == 20 && c.cz == 20) {
-      seq[0]=c.outside_face_color_seg();
+      seq[0] = c.outside_face_color_seg();
     }
     if (c.cx == 20 && c.cy == 20 && c.cz == -20) {
-      seq[1]=c.outside_face_color_seg();
+      seq[1] = c.outside_face_color_seg();
     }
     if (c.cx == 20 && c.cy == -20 && c.cz == 20) {
-      seq[2]=c.outside_face_color_seg();
+      seq[2] = c.outside_face_color_seg();
     }
     if (c.cx == 20 && c.cy == -20 && c.cz == -20) {
-      seq[3]=c.outside_face_color_seg();
+      seq[3] = c.outside_face_color_seg();
     }
     if (c.cx == -20 && c.cy == 20 && c.cz == 20) {
-      seq[4]=c.outside_face_color_seg();
+      seq[4] = c.outside_face_color_seg();
     }
     if (c.cx == -20 && c.cy == 20 && c.cz == -20) {
-      seq[5]=c.outside_face_color_seg();
+      seq[5] = c.outside_face_color_seg();
     }
     if (c.cx == -20 && c.cy == -20 && c.cz == 20) {
-      seq[6]=c.outside_face_color_seg();
+      seq[6] = c.outside_face_color_seg();
     }
     if (c.cx == -20 && c.cy == -20 && c.cz == -20) {
-      seq[7]=c.outside_face_color_seg();
+      seq[7] = c.outside_face_color_seg();
     }
-    
   }
-  var s="";
-  for(var item of seq){
-    s=s+item;
+  var s = "";
+  for (var item of seq) {
+    s = s + item;
   }
-  
+
   return s;
 }
 
+function log_trans_status() {
+   
+  
+  // 產生方塊顏色序列標籤
+  var new_seq = get_seq();
+  if (trans_ori_seq.length > 0 && trans_axis.length>0) { // 有前一個狀態
+    // 紀錄轉換狀態
+    if (trans_table[trans_ori_seq] == null) {
+      //p.to['x+']="RYRR.."
+      trans_table[trans_ori_seq] = new TransStatus();
+    }
+    trans_table[trans_ori_seq].to[trans_axis] = new_seq;
+    
+    //print(trans_ori_seq+" >>> "+trans_axis+" >>> "+new_seq)
+  }
 
+  trans_ori_seq = new_seq;
+}
 
+// 儲存轉換表紀錄
+function save_trans_table(){
+  
+  var data={
+      raw:trans_table ,
+      stat: get_trans_stat()
+  };
+  
+  let dstr = JSON.stringify(data);
+  localStorage.setItem('transtable',dstr) ;
+  print( "DATA SAVED!!!")
+}
+// 讀取轉換表紀錄
+function load_trans_table(){
+    
+  let dstr = localStorage.getItem('transtable') ;
+  if( dstr != null ){
+      let data = JSON.parse( dstr) ;
+      trans_table = data.raw ;
+      print("==========================")
+      print(trans_table) ;
+      print("==========================")
+  }  
+  print( "DATA LOADED!!!")
+}
+// 顯示轉換表統計結果
+function get_trans_stat(){
+  let n = 0 ;
+  let e = 0 ;
+  
+//print("------------------------------")
+  for( let it in trans_table ){
+      //console.log(it);
+      n++;
+      for( let itt in trans_table[it].to ){
+          //console.log(itt+" ==> "+trans_table[it].to[itt]) ;
+        if( trans_table[it].to[itt].length>0){
+          e++;
+        }
+      }
+  }  
+
+  return { node:n , edge:e} ;
+  
+}
