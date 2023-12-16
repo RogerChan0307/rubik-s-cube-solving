@@ -9,6 +9,12 @@
 ### 尋找成功的結果
  - 在跑完約25幾萬次模擬後檢視20萬筆的方塊狀態 只有一筆是完整的 而那一次是最初還沒shuffle的時候 後來發現因為程式的寫法導致八顆角塊有一顆不管怎麼轉都不會移動 因此只會有一種完成的結果
 
+## Simulatioms analizing
+
+| First Header  | Second Header | Third Header  | Forth Header |
+| ------------- | ------------- | ------------- | ------------- |
+| Content Cell  | Content Cell  |
+| Content Cell  | Content Cell  |
  
 ## Log 
 - Project creation -Jul.29.2023
