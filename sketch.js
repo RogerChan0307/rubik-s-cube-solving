@@ -401,6 +401,7 @@ function key_events() {
         if (shuffle_list.length == shuffle_list_idx) {
           create_shuffle_list(10000);
           print(shuffle_list);
+          is_save = false;
         }
         break;
     }
@@ -649,7 +650,7 @@ function setup() {
 
   create_cubes();
 
-  load_trans_table();
+  //load_trans_table();
 }
 
 function draw() {
@@ -680,6 +681,9 @@ function draw() {
       print("shuffle turn : " + shuffle_list_idx);
 
       log_trans_status();
+      // if( shuffle_list_idx%1000==0){
+      //   save_trans_table();
+      // }
 
       if (shuffle_list[shuffle_list_idx] == "x+") {
         trans_axis = "x+";
@@ -710,8 +714,8 @@ function draw() {
     }
   } else if(shuffle_list.length>0 && is_save==false){
     print(trans_table);
-    print( get_trans_stat() ) ;
-    save_trans_table();
+    print( get_trans_stat() ) ;    
+    save_trans_table_to_file();
     is_save = true;
   }
 
@@ -810,6 +814,52 @@ function save_trans_table(){
   localStorage.setItem('transtable',dstr) ;
   print( "DATA SAVED!!!")
 }
+
+
+async function saveFile( content ) {
+  try {
+    // create a new handle
+    const newHandle = await window.showSaveFilePicker();
+
+    // create a FileSystemWritableFileStream to write to
+    const writableStream = await newHandle.createWritable();
+
+    // write our file
+    await writableStream.write(content);
+
+    // close the file and write the contents to disk.
+    await writableStream.close();
+  } catch (err) {
+    console.error(err.name, err.message);
+  }
+}
+
+function save_trans_table_to_file(){
+  
+  var data={
+      raw:trans_table ,
+      stat: get_trans_stat()
+  };
+  
+  let dstr = JSON.stringify(data);
+  
+  saveFile(dstr) ;
+  
+  print( "DATA SAVED!!!")
+}
+
+
+function load_trans_table_file(f_name){
+  var file_name ="" ;
+  fetch(f_name)
+    .then((response) => response.json())
+    .then((json) => {
+      console.log( json) ;
+      trans_table = json.raw ;
+    console.log("DATA LOADED FROM FILE!!");
+    });
+}
+
 // 讀取轉換表紀錄
 function load_trans_table(){
     
