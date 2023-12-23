@@ -11,11 +11,15 @@
  - 轉移的結果沒有記錄到成功的狀態？？？？？？？
 
 
-## Simulatioms analizing
+## Simulation analysis
+### 1st simulation : 250K random shuffles
+- node的數次還持續增加
+- 連結到成功頁面的機率太低
+- 調整shuffle的程式 讓成功數增加
 
-| First Header  | Second Header | Third Header  | Forth Header |
+| node  | edge | edge( connected to success-node)  | Forth Header |
 | ------------- | ------------- | ------------- | ------------- |
-| Content Cell  | Content Cell  |
+| 206015  | 255330  | 3  | kkk  |
 | Content Cell  | Content Cell  |
  
 ## Log 
