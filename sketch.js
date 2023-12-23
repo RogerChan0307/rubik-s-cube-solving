@@ -18,6 +18,8 @@ var trans_table = {}; // 記錄所有轉換的狀態
 
 var is_save = false;
 
+// 紀錄完成的狀態，同一面的位置
+var complete_arr ;
 
 class Cube {
   constructor(cx, cy, cz, sz) {
@@ -332,12 +334,68 @@ class Cube {
   }
 }
 
-function create_shuffle_list(n) {
+function create_perfect_shuffle( len ){
+  var l1 = [] ;
+  var l2 = [] ;
+  let a = ["x+", "y+", "z+","x-", "y-", "z-"];
+  for (let i = 0; i < len; i++) {
+    let r = int(random(6));
+    let r2 = (r+3)%6 ;
+    l1.push(r);
+    l2.push(r2);
+  }
+
+  var r = [];
+  for(let i=0 ; i<l1.length ; i++){
+    r.push( a[l1[i]]) ;
+  }
+  for(let i=l2.length-1 ; i>=0 ; i--){
+    r.push( a[l2[i]]) ;
+  }
+  // console.log( l1 ) ;
+  // console.log( l2 ) ;
+
+  return r ;
+
+}
+
+function create_shuffle_list() {
+  
+  for( let i=0  ; i<10 ; i++){
+    let a = create_perfect_shuffle(1) ;
+    shuffle_list.push.apply( shuffle_list , a) ;
+  }
+
+  for( let i=0  ; i<100 ; i++){
+    let a = create_perfect_shuffle(2) ;
+    shuffle_list.push.apply( shuffle_list , a) ;
+  }
+
+  for( let i=0  ; i<1000 ; i++){
+    let a = create_perfect_shuffle(3) ;
+    shuffle_list.push.apply( shuffle_list , a) ;
+  }
+}
+
+function create_shuffle_list2(n) {
   let a = ["x+", "y+", "z+","x-", "y-", "z-"];
   for (let i = 0; i < n; i++) {
     let r = int(random(6));
     shuffle_list.push(a[r]);
   }
+}
+
+function test_shuffle_list(){
+  shuffle_list.push('x+');
+  shuffle_list.push('x+');
+  shuffle_list.push('y+');
+  shuffle_list.push('z+');
+  shuffle_list.push('z-');
+  shuffle_list.push('y-');
+  shuffle_list.push('x-');
+  shuffle_list.push('x-');
+  shuffle_list.push('x-');
+  shuffle_list.push('x-');
 }
 
 function create_cubes() {
@@ -399,7 +457,7 @@ function key_events() {
 
       case 82: //r
         if (shuffle_list.length == shuffle_list_idx) {
-          create_shuffle_list(10000);
+          create_shuffle_list();
           print(shuffle_list);
           is_save = false;
         }
@@ -650,6 +708,8 @@ function setup() {
 
   create_cubes();
 
+  complete_arr = get_complete_seq_position_array();
+
   //load_trans_table();
 }
 
@@ -877,19 +937,78 @@ function load_trans_table(){
 function get_trans_stat(){
   let n = 0 ;
   let e = 0 ;
-  
+  let cp_e = 0; // 紀錄有相連成功面的筆數
+  let cp= 'YRBYRPYSBYSPGRBGRPGSBGSP';
 //print("------------------------------")
   for( let it in trans_table ){
       //console.log(it);
       n++;
       for( let itt in trans_table[it].to ){
-          //console.log(itt+" ==> "+trans_table[it].to[itt]) ;
+        //console.log(itt+" ==> "+trans_table[it].to[itt]) ;
         if( trans_table[it].to[itt].length>0){
           e++;
+          if( it==cp || trans_table[it].to[itt]==cp ){
+            cp_e++;
+          }
         }
       }
   }  
 
-  return { node:n , edge:e} ;
+  return { node:n , edge:e , edge_cmp:cp_e} ;
   
 }
+
+
+
+function get_complete_seq_position_array() {
+  let t = 'YRBYRPYSBYSPGRBGRPGSBGSP';
+  var result = {} ;
+  for( var i=0 ; i<t.length ; i++){
+    var c = t[i] ;
+    if( result[c]==null){
+      result[c]=[]
+    }
+    result[c].push(i);
+  }
+  var arr = [] ;
+  for( let color in result ){
+    //console.log(result[color]) ;
+    arr.push( result[color]) ;
+  }
+
+  return arr;
+}
+
+// 檢查是否是完成的序列
+function check_complete_seq( seq ){
+  //       0123456789
+
+  for( let face of complete_arr ){
+    let color = '' ;
+    for( let pos of face ){
+      if( color =='' ){
+        color = seq[pos] ;
+      }else{
+        if( color!=seq[pos]){
+          return false ;
+        }
+      }
+    }
+  }
+
+  return true ;
+
+
+}
+
+function count_complete_seq(){
+  var total = 0;
+  for( let seq in trans_table ){
+    if( check_complete_seq(seq)){
+      total++;
+    }    
+  }
+  return total ;
+
+}
+
