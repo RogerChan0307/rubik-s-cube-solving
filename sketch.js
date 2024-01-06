@@ -361,18 +361,23 @@ function create_perfect_shuffle( len ){
 
 function create_shuffle_list() {
   
-  for( let i=0  ; i<10 ; i++){
-    let a = create_perfect_shuffle(1) ;
-    shuffle_list.push.apply( shuffle_list , a) ;
-  }
+//   for( let i=0  ; i<10 ; i++){
+//     let a = create_perfect_shuffle(1) ;
+//     shuffle_list.push.apply( shuffle_list , a) ;
+//   }
 
-  for( let i=0  ; i<100 ; i++){
-    let a = create_perfect_shuffle(2) ;
-    shuffle_list.push.apply( shuffle_list , a) ;
-  }
+//   for( let i=0  ; i<100 ; i++){
+//     let a = create_perfect_shuffle(2) ;
+//     shuffle_list.push.apply( shuffle_list , a) ;
+//   }
+
+//   for( let i=0  ; i<1000 ; i++){
+//     let a = create_perfect_shuffle(3) ;
+//     shuffle_list.push.apply( shuffle_list , a) ;
+//   }
 
   for( let i=0  ; i<1000 ; i++){
-    let a = create_perfect_shuffle(3) ;
+    let a = create_perfect_shuffle(6) ;
     shuffle_list.push.apply( shuffle_list , a) ;
   }
 }
@@ -456,9 +461,12 @@ function key_events() {
         break;
 
       case 82: //r
+        console.log( shuffle_list) ;
+        console.log( shuffle_list_idx) ;
         if (shuffle_list.length == shuffle_list_idx) {
-          create_shuffle_list();
-          print(shuffle_list);
+          let n = parseInt(prompt('請輸入 shuffle 次數')) ;
+          create_shuffle_list2(n);
+          //print(shuffle_list);
           is_save = false;
         }
         break;
@@ -738,45 +746,49 @@ function draw() {
   if (shuffle_list_idx < shuffle_list.length) {
     // 全部停止才可以轉
     if (d_rx == 0 && d_ry == 0 && d_rz == 0) {
-      print("shuffle turn : " + shuffle_list_idx);
+        if(shuffle_list_idx%100==0)
+          print("shuffle turn : " + shuffle_list_idx);
 
-      log_trans_status();
-      // if( shuffle_list_idx%1000==0){
-      //   save_trans_table();
-      // }
+      // 紀錄轉移狀態
+      // log_trans_status();
+      
 
       if (shuffle_list[shuffle_list_idx] == "x+") {
         trans_axis = "x+";
-        // d_rx = 18;
-        d_rx = 90;
+        d_rx = 18;
+        // d_rx = 90;
       } else if (shuffle_list[shuffle_list_idx] == "y+") {
         trans_axis = "y+";
-        // d_ry = 18;
-        d_ry = 90;
+        d_ry = 18;
+        // d_ry = 90;
       } else if (shuffle_list[shuffle_list_idx] == "z+") {
         trans_axis = "z+";
-        // d_rz = 18;
-        d_rz = 90;
+        d_rz = 18;
+        // d_rz = 90;
       }else if (shuffle_list[shuffle_list_idx] == "x-") {
         trans_axis = "x-";
-        // d_rx = 18;
-        d_rx = -90;
+        d_rx = 18;
+        // d_rx = -90;
       } else if (shuffle_list[shuffle_list_idx] == "y-") {
         trans_axis = "y-";
-        // d_ry = 18;
-        d_ry = -90;
+        d_ry = 18;
+        // d_ry = -90;
       } else if (shuffle_list[shuffle_list_idx] == "z-") {
         trans_axis = "z-";
-        // d_rz = 18;
-        d_rz = -90;
+        d_rz = 18;
+        // d_rz = -90;
       }
       shuffle_list_idx++;
     }
-  } else if(shuffle_list.length>0 && is_save==false){
-    print(trans_table);
-    print( get_trans_stat() ) ;    
-    save_trans_table_to_file();
-    is_save = true;
+  } else{
+     if(shuffle_list.length>0 && is_save==false){
+      // 轉移狀態存檔
+      // print(trans_table);
+      // print( get_trans_stat() ) ;    
+      // save_trans_table_to_file();
+      // is_save = true;
+     }
+     key_events();
   }
 
   // 旋轉
@@ -804,7 +816,7 @@ function draw() {
   //print( get_seq()) ;
   // print("===============")
   // 取得鍵盤事件
-  key_events();
+  
 }
 
 function get_seq() {
@@ -1012,3 +1024,57 @@ function count_complete_seq(){
 
 }
 
+
+function solve(){
+  //load_trans_table_file('log_261897.log');
+  let cp= 'YRBYRPYSBYSPGRBGRPGSBGSP';
+  let start_seq = get_seq();
+  trans_table[start_seq].res=[];
+  let to_do = [] ;
+  to_do.push( start_seq ) ;
+
+  while(to_do.length>0){
+    // 拿出一個工作
+    let seq = to_do[0];
+    // 刪掉第一個工作
+    to_do.splice(0,1);
+
+    // 找後面的項目
+    for( let itt in trans_table[seq].to ){
+      //console.log(itt+" ==> "+trans_table[it].to[itt]) ;
+      if( trans_table[seq].to[itt].length>0){
+        if( trans_table[seq].to[itt]==cp ){
+          // 找到解答
+          console.log("==========SOLUTION==================");
+          trans_table[seq].res.push(itt);
+          console.log(trans_table[seq].res);
+          console.log("==========SOLUTION==================");
+          // shuffle_list = trans_table[seq].res;
+          // shuffle_list_idx=0;
+          return ;
+        }else{
+          // 還沒有解答 
+          let now_seq = trans_table[seq].to[itt] ;
+          // 已經有被走過，不重複做
+          if( trans_table[now_seq].res !=null ){ 
+            continue;
+          }
+          // 1. 把目前的解法記下
+          let pre = trans_table[seq].res.concat() ; // 前面的轉法
+          
+          pre.push( itt) ; // 這一次的轉法
+          trans_table[now_seq].res = pre ; 
+          // 如果找太久沒有答案
+          if( pre.length>=10 ){ 
+            continue ; // 不再做
+          }
+          // 2. 加入工作清單
+          to_do.push( now_seq ) ;
+        }
+      }
+    }
+
+  }
+
+
+}
