@@ -15,11 +15,15 @@ var shuffle_list_idx = 0;
 var trans_ori_seq = ""; //原來的狀態
 var trans_axis = ""; // 旋轉的方式
 var trans_table = {}; // 記錄所有轉換的狀態
+var trans_table_bakeup = {};
 
 var is_save = false;
 
 // 紀錄完成的狀態，同一面的位置
 var complete_arr ;
+
+// 按鍵時間
+var press_fc = 0;
 
 class Cube {
   constructor(cx, cy, cz, sz) {
@@ -403,6 +407,45 @@ function test_shuffle_list(){
   shuffle_list.push('x-');
 }
 
+
+
+function delay(milliseconds){
+  return new Promise(resolve => {
+      setTimeout(resolve, milliseconds);
+  });
+}
+
+
+async function simulation(){
+  var n = 3 ;//= prompt('shuffle times : ') ;
+  
+  var succ = 0 ;
+  var failc = 0 ;
+  for( var i=0 ; i<50 ; i++){
+      cubes=[] ;
+      shuffle_list=[];
+      shuffle_list_idx=0;
+      create_cubes();
+      await delay(500);
+      create_shuffle_list2(n);
+      print( shuffle_list ) ;
+      while( shuffle_list_idx < shuffle_list.length ){
+        await delay(500);
+      }
+      await delay(500);
+      var r = solve_quick();
+      if( r){
+        succ++ ;
+      }else{
+        print( shuffle_list ) ;
+        failc++ ;
+      }
+      print((i+1)+","+succ+","+failc);
+      await delay(500);
+  }
+  
+}
+
 function create_cubes() {
   var pos = [-20, 20];
   for (let n1 of pos) {
@@ -413,15 +456,17 @@ function create_cubes() {
     }
   }
   trans_ori_seq =  get_seq();
-  print("START:"+trans_ori_seq) ;
+  //print("START:"+trans_ori_seq) ;
 }
 function preload() {
   myFont = loadFont("montserrat.regular.ttf");
+  load_trans_table_from_site();
 }
 
 function key_events() {
   const r = 3;
-  if (keyIsPressed) {
+  if (keyIsPressed && frameCount-press_fc>50) {
+    press_fc = frameCount ;
     //print(keyCode);
     switch (keyCode) {
       case 65: //a
@@ -464,12 +509,21 @@ function key_events() {
         console.log( shuffle_list) ;
         console.log( shuffle_list_idx) ;
         if (shuffle_list.length == shuffle_list_idx) {
-          let n = parseInt(prompt('請輸入 shuffle 次數')) ;
+          //let n = parseInt(prompt('請輸入 shuffle 次數')) ;
+          let n = 18;
           create_shuffle_list2(n);
           //print(shuffle_list);
           is_save = false;
         }
         break;
+
+
+        case 81: // Q
+          //print('Q')
+          if (d_ry == 0 && d_rx == 0 && d_rz == 0) {
+            simulation();
+          }
+          break;
     }
   }
 }
@@ -729,7 +783,7 @@ function draw() {
   fill(30);
   text("A , S , D : rotate", -120, 120);
   text("Z , X , C : rotate(backward)", -120, 150);
-  text("R : shuffle", -120, 180);
+  text("R : shuffle     Q : Simulation", -120, 180);
 
   // 滑鼠控制：旋轉攝影機
   orbitControl(2, 2, 2);
@@ -746,8 +800,9 @@ function draw() {
   if (shuffle_list_idx < shuffle_list.length) {
     // 全部停止才可以轉
     if (d_rx == 0 && d_ry == 0 && d_rz == 0) {
-        if(shuffle_list_idx%100==0)
-          print("shuffle turn : " + shuffle_list_idx);
+        // if(shuffle_list_idx%100==0){
+        //   print("shuffle turn : " + shuffle_list_idx);
+        // }
 
       // 紀錄轉移狀態
       // log_trans_status();
@@ -767,15 +822,15 @@ function draw() {
         // d_rz = 90;
       }else if (shuffle_list[shuffle_list_idx] == "x-") {
         trans_axis = "x-";
-        d_rx = 18;
+        d_rx = -18;
         // d_rx = -90;
       } else if (shuffle_list[shuffle_list_idx] == "y-") {
         trans_axis = "y-";
-        d_ry = 18;
+        d_ry = -18;
         // d_ry = -90;
       } else if (shuffle_list[shuffle_list_idx] == "z-") {
         trans_axis = "z-";
-        d_rz = 18;
+        d_rz = -18;
         // d_rz = -90;
       }
       shuffle_list_idx++;
@@ -932,6 +987,17 @@ function load_trans_table_file(f_name){
     });
 }
 
+function load_trans_table_from_site(){
+  fetch('/log_261897.log')
+  .then((response) => response.json())
+  .then((json) => {
+    console.log( json) ;
+    trans_table = json.raw ;
+    trans_table_bakeup = JSON.parse(JSON.stringify(trans_table));
+  console.log("DATA LOADED FROM FILE!!");
+  });
+}
+
 // 讀取轉換表紀錄
 function load_trans_table(){
     
@@ -1048,9 +1114,14 @@ function solve(){
           console.log("==========SOLUTION==================");
           trans_table[seq].res.push(itt);
           console.log(trans_table[seq].res);
-          console.log("==========SOLUTION==================");
+          console.log("==========--------==================");
+          // result to shuffle : + >> - / - >> +
           // shuffle_list = trans_table[seq].res;
-          // shuffle_list_idx=0;
+          shuffle_list = trans_table[seq].res;
+          // for( var r of trans_table[seq].res ){            
+          //   shuffle_list.push(r);
+          // }          
+          shuffle_list_idx=0;
           return ;
         }else{
           // 還沒有解答 
@@ -1065,7 +1136,7 @@ function solve(){
           pre.push( itt) ; // 這一次的轉法
           trans_table[now_seq].res = pre ; 
           // 如果找太久沒有答案
-          if( pre.length>=10 ){ 
+          if( pre.length>=20 ){ 
             continue ; // 不再做
           }
           // 2. 加入工作清單
@@ -1076,5 +1147,66 @@ function solve(){
 
   }
 
+  // restore trans_table
+  trans_table = JSON.parse(JSON.stringify(trans_table_bakeup));
+
 
 }
+
+function solve_quick(){
+  //load_trans_table_file('log_261897.log');
+  let cp= 'YRBYRPYSBYSPGRBGRPGSBGSP';
+  let start_seq = get_seq();
+  if(trans_table[start_seq]==null ){
+    return false ;
+  }
+  trans_table[start_seq].res=[];
+  let to_do = [] ;
+  to_do.push( start_seq ) ;
+
+  while(to_do.length>0){
+    // 拿出一個工作
+    let seq = to_do[0];
+    // 刪掉第一個工作
+    to_do.splice(0,1);
+
+    // 找後面的項目
+    for( let itt in trans_table[seq].to ){
+      //console.log(itt+" ==> "+trans_table[it].to[itt]) ;
+      if( trans_table[seq].to[itt].length>0){
+        if( trans_table[seq].to[itt]==cp ){
+          // 找到解答
+          
+          return true;
+        }else{
+          // 還沒有解答 
+          let now_seq = trans_table[seq].to[itt] ;
+          // 已經有被走過，不重複做
+          if( trans_table[now_seq].res !=null ){ 
+            continue;
+          }
+          // 1. 把目前的解法記下
+          let pre = trans_table[seq].res.concat() ; // 前面的轉法
+          
+          pre.push( itt) ; // 這一次的轉法
+          trans_table[now_seq].res = pre ; 
+          // 如果找太久沒有答案
+          if( pre.length>=20 ){ 
+            continue ; // 不再做
+          }
+          // 2. 加入工作清單
+          to_do.push( now_seq ) ;
+        }
+      }
+    }
+
+  }
+
+  // restore trans_table
+  trans_table = JSON.parse(JSON.stringify(trans_table_bakeup));
+
+  return false ;
+}
+
+
+//BRGYRPYSBYSPGBSRBYRPGGSP
