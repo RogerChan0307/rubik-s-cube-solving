@@ -996,7 +996,7 @@ function load_trans_table_file(f_name){
 }
 
 function load_trans_table_from_site(){
-  fetch('/log_261897.log')
+  fetch('/rubik-s-cube-solving/log_261897.log')
   .then((response) => response.json())
   .then((json) => {
     console.log( json) ;
