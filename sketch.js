@@ -25,6 +25,9 @@ var complete_arr ;
 // 按鍵時間
 var press_fc = 0;
 
+// 警告訊息
+var warning_info = '' ;
+
 class Cube {
   constructor(cx, cy, cz, sz) {
     this.faces = [];
@@ -432,7 +435,7 @@ async function simulation(){
       while( shuffle_list_idx < shuffle_list.length ){
         await delay(500);
       }
-      await delay(500);
+      await delay(2000);
       var r = solve_quick();
       if( r){
         succ++ ;
@@ -467,7 +470,7 @@ function key_events() {
   const r = 3;
   if (keyIsPressed && frameCount-press_fc>50) {
     press_fc = frameCount ;
-    //print(keyCode);
+    //print("===>"+keyCode);
     switch (keyCode) {
       case 65: //a
         if (d_ry == 0 && d_rz == 0) {
@@ -506,11 +509,11 @@ function key_events() {
         break;
 
       case 82: //r
-        console.log( shuffle_list) ;
-        console.log( shuffle_list_idx) ;
+        //console.log( shuffle_list) ;
+        //console.log( shuffle_list_idx) ;
         if (shuffle_list.length == shuffle_list_idx) {
           //let n = parseInt(prompt('請輸入 shuffle 次數')) ;
-          let n = 18;
+          let n = 6;
           create_shuffle_list2(n);
           //print(shuffle_list);
           is_save = false;
@@ -518,12 +521,13 @@ function key_events() {
         break;
 
 
-        case 81: // Q
-          //print('Q')
-          if (d_ry == 0 && d_rx == 0 && d_rz == 0) {
-            simulation();
-          }
-          break;
+      case 81: // Q
+        //print('Q')
+        if (d_ry == 0 && d_rx == 0 && d_rz == 0) {
+          //simulation();
+          solve();
+        }
+        break;
     }
   }
 }
@@ -777,13 +781,17 @@ function setup() {
 
 function draw() {
   // 背景色
-  background(200);
+  background(255);
 
   // 訊息
+  if( warning_info.length>0){
+    fill(255,0,0);
+    text(warning_info , -120 ,90) ;
+  }
   fill(30);
   text("A , S , D : rotate", -120, 120);
   text("Z , X , C : rotate(backward)", -120, 150);
-  text("R : shuffle     Q : Simulation", -120, 180);
+  text("R : shuffle     Q : Solve", -120, 180);
 
   // 滑鼠控制：旋轉攝影機
   orbitControl(2, 2, 2);
@@ -810,27 +818,27 @@ function draw() {
 
       if (shuffle_list[shuffle_list_idx] == "x+") {
         trans_axis = "x+";
-        d_rx = 18;
+        d_rx = 10;
         // d_rx = 90;
       } else if (shuffle_list[shuffle_list_idx] == "y+") {
         trans_axis = "y+";
-        d_ry = 18;
+        d_ry = 10;
         // d_ry = 90;
       } else if (shuffle_list[shuffle_list_idx] == "z+") {
         trans_axis = "z+";
-        d_rz = 18;
+        d_rz = 10;
         // d_rz = 90;
       }else if (shuffle_list[shuffle_list_idx] == "x-") {
         trans_axis = "x-";
-        d_rx = -18;
+        d_rx = -10;
         // d_rx = -90;
       } else if (shuffle_list[shuffle_list_idx] == "y-") {
         trans_axis = "y-";
-        d_ry = -18;
+        d_ry = -10;
         // d_ry = -90;
       } else if (shuffle_list[shuffle_list_idx] == "z-") {
         trans_axis = "z-";
-        d_rz = -18;
+        d_rz = -10;
         // d_rz = -90;
       }
       shuffle_list_idx++;
@@ -1095,6 +1103,10 @@ function solve(){
   //load_trans_table_file('log_261897.log');
   let cp= 'YRBYRPYSBYSPGRBGRPGSBGSP';
   let start_seq = get_seq();
+  if(trans_table[start_seq]==null ){
+    warning_info='Data not found!';
+    return ;
+  }
   trans_table[start_seq].res=[];
   let to_do = [] ;
   to_do.push( start_seq ) ;
@@ -1158,6 +1170,7 @@ function solve_quick(){
   let cp= 'YRBYRPYSBYSPGRBGRPGSBGSP';
   let start_seq = get_seq();
   if(trans_table[start_seq]==null ){
+    print("fail:"+start_seq);
     return false ;
   }
   trans_table[start_seq].res=[];
