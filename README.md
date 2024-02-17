@@ -2,8 +2,8 @@
 ## Introduction
 - In this project, I will create an interactive virtual 2x2 cube using Javascript and the HTML canvas element. The goals are to render a graphical cube interface, enabling rotating the faces by clicking, dragging, and 90 degree turns to randomly scramble then solve the cube.
 
-## Future work and emprovement
-- 1. Expand to larger cube sizes:
+## Future works and improvements
+1. Expand to larger cube sizes:
 Support 3x3, 4x4 or higher order Rubik's cubes. This would require modeling more complex cubie mechanics. A generalized class could be created to work for Rubik's cubes of any size.
 2. Mobile/touch support: 
 Make the simulator responsive for mobile devices and add touch/swipe functionality instead of click/drag for rotations.
@@ -15,6 +15,9 @@ Enable a VR experience where puzzles can be manipulated and explored in an immer
 - Working on this Rubik's cube project ended up being more challenging than I initially anticipated, but ultimately a rewarding learning experience. I had thought that modeling a simple 2x2 cube would be fairly straightforward. However, I gained a new appreciation for the complexity of mapping out all the possible cube states and implementing the rotation logic.
 The most difficult part was conceptualizing how each cube twist transforms the positions of the individual cubes in three-dimensional space. I learned that every rotation needs to account for all 8 cubes and properly swap their ordering. My first attempts had various bugs - cubes disappearing, duplicates appearing, or movements not matching a real puzzle. Visualizing the transformations and correctly applying matrix operations took some time grasping.
 On the positive side, I'm proud of the final working simulator with its colorful graphical animation. The interface allows intuitive play just like a physical Rubik's cube. I also managed to add a scramble function and automated solving using an algorithm I researched. The project improved my skills in Javascript animations, math visualization, and most importantly taking a complex system and breaking it down into logical steps.
+---
+# Other Notes
+
 ## Tasks
 - building simulation models
  <img width="309" alt="Screenshot 2023-11-04 at 18 29 30" src="https://github.com/RogerChan0307/rubik-s-cube-solving/assets/140886171/f65a80f3-61f0-4a4d-859a-289aa4301fc6">
