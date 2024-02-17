@@ -1,4 +1,6 @@
 # rubik-s-cube-solving
+## Project URL
+- https://rogerchan0307.github.io/rubik-s-cube-solving/
 ## Introduction
 - In this project, I will create an interactive virtual 2x2 cube using Javascript and the HTML canvas element. The goals are to render a graphical cube interface, enabling rotating the faces by clicking, dragging, and 90 degree turns to randomly scramble then solve the cube.
 
